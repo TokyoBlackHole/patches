@@ -1,0 +1,79 @@
+--- a/Makefile
++++ b/Makefile
+@@ -79,12 +79,14 @@ MANUAL_PAGES_7 = \
+ 
+ MANUAL_PAGES = $(MANUAL_PAGES_1) $(MANUAL_PAGES_7)
+ 
+-SOEXTENSION	= so
+-LIBGIFSO	= libgif.$(SOEXTENSION)
+-LIBGIFSOMAJOR	= libgif.$(SOEXTENSION).$(LIBMAJOR)
+-LIBGIFSOVER	= libgif.$(SOEXTENSION).$(LIBVER)
+-LIBUTILSO	= libutil.$(SOEXTENSION)
+-LIBUTILSOMAJOR	= libutil.$(SOEXTENSION).$(LIBMAJOR)
++SOEXTENSION     = dll
++LIBGIFSO        = libgif-$(LIBMAJOR).$(SOEXTENSION)
++LIBGIFSOIMPORT  = libgif.dll.a
++LIBGIFSOMAJOR   = libgif-$(LIBMAJOR).$(SOEXTENSION)
++LIBGIFSOVER     = libgif-$(LIBMAJOR).$(SOEXTENSION)
++LIBUTILSO       = libutil-$(LIBMAJOR).$(SOEXTENSION)
++LIBUTILSOMAJOR  = libutil-$(LIBMAJOR).$(SOEXTENSION)
++LIBUTILSOIMPORT = libutil.dll.a
+ ifeq ($(UNAME), Darwin)
+ SOEXTENSION	= dylib
+ LIBGIFSO        = libgif.$(SOEXTENSION)
+@@ -95,10 +97,6 @@ LIBUTILSOMAJOR	= libutil.$(LIBMAJOR).$(SOEXTENSION)
+ endif
+ 
+ all: $(LIBGIFSO) libgif.a $(LIBUTILSO) libutil.a $(UTILS)
+-ifeq ($(UNAME), Darwin)
+-else
+-	$(MAKE) -C doc
+-endif
+ 
+ $(UTILS):: libgif.a libutil.a
+ 
+@@ -106,17 +104,17 @@ $(LIBGIFSO): $(OBJECTS) $(HEADERS)
+ ifeq ($(UNAME), Darwin)
+ 	$(CC) $(CFLAGS) -dynamiclib -current_version $(LIBVER) $(OBJECTS) -o $(LIBGIFSO)
+ else
+-	$(CC) $(CFLAGS) $(CPPFLAGS) -shared $(LDFLAGS) -Wl,-soname -Wl,$(LIBGIFSOMAJOR) -o $(LIBGIFSO) $(OBJECTS)
++	$(CC) $(CFLAGS) $(CPPFLAGS) -shared $(LDFLAGS) -Wl,--out-implib,$(LIBGIFSOIMPORT) -o $(LIBGIFSO) $(OBJECTS)
+ endif
+ 
+ libgif.a: $(OBJECTS) $(HEADERS)
+ 	$(AR) rcs libgif.a $(OBJECTS)
+ 
+-$(LIBUTILSO): $(UOBJECTS) $(UHEADERS)
++$(LIBUTILSO): $(UOBJECTS) $(UHEADERS) $(LIBGIFSO)
+ ifeq ($(UNAME), Darwin)
+ 	$(CC) $(CFLAGS) -dynamiclib -current_version $(LIBVER) $(OBJECTS) -o $(LIBUTILSO)
+ else
+-	$(CC) $(CFLAGS) $(CPPLAGS) -shared $(LDFLAGS) -Wl,-soname -Wl,$(LIBUTILMAJOR) -o $(LIBUTILSO) $(UOBJECTS)
++	$(CC) $(CFLAGS) $(CPPFLAGS) -shared $(LDFLAGS) -Wl,--out-implib,$(LIBUTILSOIMPORT) -o $(LIBUTILSO) $(UOBJECTS) -L. -lgif
+ endif
+ 
+ libutil.a: $(UOBJECTS) $(UHEADERS)
+@@ -151,9 +149,9 @@ install-include:
+ install-lib:
+ 	$(INSTALL) -d "$(DESTDIR)$(LIBDIR)"
+ 	$(INSTALL) -m 644 libgif.a "$(DESTDIR)$(LIBDIR)/libgif.a"
+-	$(INSTALL) -m 755 $(LIBGIFSO) "$(DESTDIR)$(LIBDIR)/$(LIBGIFSOVER)"
+-	ln -sf $(LIBGIFSOVER) "$(DESTDIR)$(LIBDIR)/$(LIBGIFSOMAJOR)"
+-	ln -sf $(LIBGIFSOMAJOR) "$(DESTDIR)$(LIBDIR)/$(LIBGIFSO)"
++	$(INSTALL) -m 644 $(LIBGIFSOIMPORT) "$(DESTDIR)$(LIBDIR)/$(LIBGIFSOIMPORT)"
++	$(INSTALL) -d "$(DESTDIR)$(BINDIR)"
++	$(INSTALL) -m 755 $(LIBGIFSO) "$(DESTDIR)$(BINDIR)/$(LIBGIFSO)"
+ install-man:
+ 	$(INSTALL) -d "$(DESTDIR)$(MANDIR)/man1" "$(DESTDIR)$(MANDIR)/man7"
+ 	$(INSTALL) -m 644 $(MANUAL_PAGES_1:xml=1) "$(DESTDIR)$(MANDIR)/man1"
+--- a/doc/Makefile
++++ b/doc/Makefile
+@@ -15,7 +15,7 @@
+ .adoc.html:
+ 	asciidoc $<
+ 
+-all: allhtml manpages
++all: manpages
+ 
+ # The distinction between XMLMAN and XMLINTERNAL is because
+ # some pages shouldn't be installed as part of a binary package;
