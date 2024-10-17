@@ -1,0 +1,88 @@
+--- a/Makefile
++++ b/Makefile
+@@ -8,7 +8,7 @@
+ #
+ OFLAGS = -O0 -g
+ OFLAGS  = -O2
+-CFLAGS  = -std=gnu99 -fPIC -Wall -Wno-format-truncation $(OFLAGS)
++CFLAGS  += -std=gnu99 -fPIC -Wall -Wno-format-truncation $(OFLAGS)
+ 
+ SHELL = /bin/sh
+ TAR = tar
+@@ -72,12 +72,14 @@ MANUAL_PAGES = \
+ 	doc/giftext.xml \
+ 	doc/giftool.xml
+ 
+-SOEXTENSION	= so
+-LIBGIFSO	= libgif.$(SOEXTENSION)
+-LIBGIFSOMAJOR	= libgif.$(SOEXTENSION).$(LIBMAJOR)
+-LIBGIFSOVER	= libgif.$(SOEXTENSION).$(LIBVER)
+-LIBUTILSO	= libutil.$(SOEXTENSION)
+-LIBUTILSOMAJOR	= libutil.$(SOEXTENSION).$(LIBMAJOR)
++SOEXTENSION     = dll
++LIBGIFSO        = libgif-$(LIBMAJOR).$(SOEXTENSION)
++LIBGIFSOIMPORT  = libgif.dll.a
++LIBGIFSOMAJOR   = libgif-$(LIBMAJOR).$(SOEXTENSION)
++LIBGIFSOVER     = libgif-$(LIBMAJOR).$(SOEXTENSION)
++LIBUTILSO       = libutil-$(LIBMAJOR).$(SOEXTENSION)
++LIBUTILSOMAJOR  = libutil-$(LIBMAJOR).$(SOEXTENSION)
++LIBUTILSOIMPORT = libutil.dll.a
+ ifeq ($(UNAME), Darwin)
+ SOEXTENSION	= dylib
+ LIBGIFSO        = libgif.$(SOEXTENSION)
+@@ -88,10 +90,6 @@ LIBUTILSOMAJOR	= libutil.$(LIBMAJOR).$(SOEXTENSION)
+ endif
+ 
+ all: $(LIBGIFSO) libgif.a $(LIBUTILSO) libutil.a $(UTILS)
+-ifeq ($(UNAME), Darwin)
+-else
+-	$(MAKE) -C doc
+-endif
+ 
+ $(UTILS):: libgif.a libutil.a
+ 
+@@ -99,17 +97,17 @@ $(LIBGIFSO): $(OBJECTS) $(HEADERS)
+ ifeq ($(UNAME), Darwin)
+ 	$(CC) $(CFLAGS) -dynamiclib -current_version $(LIBVER) $(OBJECTS) -o $(LIBGIFSO)
+ else
+-	$(CC) $(CFLAGS) -shared $(LDFLAGS) -Wl,-soname -Wl,$(LIBGIFSOMAJOR) -o $(LIBGIFSO) $(OBJECTS)
++	$(CC) $(CFLAGS) -shared $(LDFLAGS) -Wl,--out-implib,$(LIBGIFSOIMPORT) -o $(LIBGIFSO) $(OBJECTS)
+ endif
+ 
+ libgif.a: $(OBJECTS) $(HEADERS)
+ 	$(AR) rcs libgif.a $(OBJECTS)
+ 
+-$(LIBUTILSO): $(UOBJECTS) $(UHEADERS)
++$(LIBUTILSO): $(UOBJECTS) $(UHEADERS) $(LIBGIFSO)
+ ifeq ($(UNAME), Darwin)
+ 	$(CC) $(CFLAGS) -dynamiclib -current_version $(LIBVER) $(OBJECTS) -o $(LIBUTILSO)
+ else
+-	$(CC) $(CFLAGS) -shared $(LDFLAGS) -Wl,-soname -Wl,$(LIBUTILMAJOR) -o $(LIBUTILSO) $(UOBJECTS)
++	$(CC) $(CFLAGS) -shared $(LDFLAGS) -Wl,--out-implib,$(LIBUTILSOIMPORT) -o $(LIBUTILSO) $(UOBJECTS) -L. -lgif
+ endif
+ 
+ libutil.a: $(UOBJECTS) $(UHEADERS)
+@@ -144,9 +142,9 @@ install-include:
+ install-lib:
+ 	$(INSTALL) -d "$(DESTDIR)$(LIBDIR)"
+ 	$(INSTALL) -m 644 libgif.a "$(DESTDIR)$(LIBDIR)/libgif.a"
+-	$(INSTALL) -m 755 $(LIBGIFSO) "$(DESTDIR)$(LIBDIR)/$(LIBGIFSOVER)"
+-	ln -sf $(LIBGIFSOVER) "$(DESTDIR)$(LIBDIR)/$(LIBGIFSOMAJOR)"
+-	ln -sf $(LIBGIFSOMAJOR) "$(DESTDIR)$(LIBDIR)/$(LIBGIFSO)"
++	$(INSTALL) -m 644 $(LIBGIFSOIMPORT) "$(DESTDIR)$(LIBDIR)/$(LIBGIFSOIMPORT)"
++	$(INSTALL) -d "$(DESTDIR)$(BINDIR)"
++	$(INSTALL) -m 755 $(LIBGIFSO) "$(DESTDIR)$(BINDIR)/$(LIBGIFSO)"
+ install-man:
+ 	$(INSTALL) -d "$(DESTDIR)$(MANDIR)/man1"
+ 	$(INSTALL) -m 644 $(MANUAL_PAGES) "$(DESTDIR)$(MANDIR)/man1"
+--- a/doc/Makefile
++++ b/doc/Makefile
+@@ -15,7 +15,7 @@
+ .adoc.html:
+ 	asciidoc $<
+ 
+-all: allhtml manpages
++all: manpages
+ 
+ # The distinction between XMLMAN and XMLINTERNAL is because
+ # some pages shouldn't be installed as part of a binary package;
