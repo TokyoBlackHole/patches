@@ -1,0 +1,13 @@
+--- a/libmp3lame/lame.c
++++ b/libmp3lame/lame.c
+@@ -476,6 +476,10 @@
+         break;
+     }
+ 
++    if(cfg->vbr == vbr_off || cfg->vbr == vbr_abr) {
++        cfg->noise_shaping_amp = 0;
++    }
++
+ }
+ 
+ 
