@@ -1,0 +1,40 @@
+--- a/mpcchap/mpcchap.c
++++ b/mpcchap/mpcchap.c
+@@ -25,7 +25,7 @@
+ #include <inttypes.h>
+ #include <sys/stat.h>
+ 
+-#include <cuetools/cuefile.h>
++#include <libcue/libcue.h>
+ 
+ // tags.c
+ void    Init_Tags        ( void );
+@@ -161,18 +161,26 @@ error_read_in_file:
+ mpc_status add_chaps_cue(char * mpc_file, char * chap_file, mpc_demux * demux, mpc_streaminfo * si)
+ {
+ 	Cd *cd = 0;
+-	int nchap, format = UNKNOWN;
++	int nchap;
+ 	struct stat stbuf;
+ 	FILE * in_file;
+ 	int chap_pos, end_pos, chap_size, i;
+ 	char * tmp_buff;
+     mpc_status ret = MPC_STATUS_OK;
+ 
+-	if (0 == (cd = cf_parse(chap_file, &format))) {
++	in_file = fopen(chap_file, "r");
++	if (NULL == in_file) {
+ 		fprintf(stderr, "%s: input file error\n", chap_file);
+ 		return !MPC_STATUS_OK;
+ 	}
+ 
++	if (0 == (cd = cue_parse_file(in_file))) {
++		fclose(in_file);
++		fprintf(stderr, "%s: input file error\n", chap_file);
++		return !MPC_STATUS_OK;
++	}
++	fclose(in_file);
++
+ 	chap_pos = (demux->chap_pos >> 3) + si->header_position;
+ 	end_pos = mpc_demux_pos(demux) >> 3;
+ 	chap_size = end_pos - chap_pos;
