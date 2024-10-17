@@ -1,0 +1,16 @@
+--- a/share/utf8.c
++++ b/share/utf8.c
+@@ -33,6 +33,10 @@
+ 
+ #ifdef _WIN32
+ 
++void convert_free_charset(void)
++{
++}
++
+ 	/* Thanks to Peter Harris <peter.harris@hummingbird.com> for this win32
+ 	 * code.
+ 	 */
+-- 
+2.49.0
+
