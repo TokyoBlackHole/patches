@@ -1,0 +1,26 @@
+--- a/main.c
++++ b/main.c
+@@ -68,6 +68,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+ #define S_IROTH 0
+ #endif
+ 
++#ifdef _WIN32
++#define random() rand()
++#define srandom(seed) srand(seed)
++#endif
+ 
+ /*
+  * create and open the metainfo file for writing and create a stream for it
+--- a/output.c
++++ b/output.c
+@@ -35,6 +35,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+ #include "mktorrent.h"    /* struct metafile */
+ #include "output.h"
+ 
++#ifdef _WIN32
++#define random() rand()
++#define srandom(seed) srand(seed)
++#endif
+ 
+ /*
+  * write announce list

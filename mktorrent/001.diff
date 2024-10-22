@@ -1,0 +1,27 @@
+--- a/mktorrent.h
++++ b/mktorrent.h
+@@ -14,15 +14,15 @@
+ 
+ /* max torrent size in MB for a given piece length in bits */
+ /* where an X bit piece length equals a 2^X byte piece size */
+-#define BIT23MAX 12800
+-#define BIT22MAX 6400
+-#define BIT21MAX 3200
+-#define BIT20MAX 1600
+-#define BIT19MAX 800
+-#define BIT18MAX 400
+-#define BIT17MAX 200
+-#define BIT16MAX 100
+-#define BIT15MAX 50
++#define BIT23MAX 16384
++#define BIT22MAX 8192
++#define BIT21MAX 4096
++#define BIT20MAX 2048
++#define BIT19MAX 1024
++#define BIT18MAX 512
++#define BIT17MAX 256
++#define BIT16MAX 128
++#define BIT15MAX 64
+ 
+ #include <stdint.h>
+ 

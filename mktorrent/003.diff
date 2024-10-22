@@ -1,0 +1,11 @@
+--- a/init.c
++++ b/init.c
+@@ -247,7 +247,7 @@ static int process_node(const char *path, const struct stat *sb, void *data)
+ /*
+  * 'elp!
+  */
+-static void print_help()
++static void print_help(void)
+ {
+ 	printf(
+ 	  "Usage: mktorrent [OPTIONS] <target directory or filename>\n\n"
